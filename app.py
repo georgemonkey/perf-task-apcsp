@@ -24,6 +24,6 @@ def generate():
     password = generate_password(length, use_upper, use_numbers, use_symbols)
     return jsonify({"password": password})
 
-# Only run locally (optional)
+# Only run locally
 if __name__ == "__main__":
     app.run()
