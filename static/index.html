@@ -266,7 +266,7 @@
 <div class="wrap">
   <header>
     <h1>passguard</h1>
-    <p>leak checker · strength analyzer · password generator</p>
+    <p>leak protector and secure generator</p>
   </header>
 
   <div class="tabs">
@@ -405,11 +405,11 @@ document.getElementById('check-btn').addEventListener('click', async () => {
 
   // hibp
   if (data.hibp_count === null) {
-    html += `<div class="check-row"><div class="dot warn"></div><span class="label">hibp</span><span class="val warn">network error</span></div>`;
+    html += `<div class="check-row"><div class="dot warn"></div><span class="label">hibp DATA LEAK</span><span class="val warn">network error</span><span class="val">sent via k-anonymity <br> using SHA-1</span></div>`;
   } else if (data.hibp_count === 0) {
-    html += `<div class="check-row"><div class="dot ok"></div><span class="label">hibp</span><span class="val ok">no known breaches</span></div>`;
+    html += `<div class="check-row"><div class="dot ok"></div><span class="label">compared to hibp database:</span><span class="val ok">no known breaches</span><span class="val">sent via k-anonymity <br> using SHA-1</span></div>`;
   } else {
-    html += `<div class="check-row"><div class="dot bad"></div><span class="label">hibp</span><span class="val bad">found ${data.hibp_count.toLocaleString()} times</span></div>`;
+    html += `<div class="check-row"><div class="dot bad"></div><span class="label">compared to hibp database:</span><span class="val bad">found ${data.hibp_count.toLocaleString()} times</span><span class="val">sent via k-anonymity <br> using SHA-1</span></div>`;
   }
 
   result.innerHTML = html;

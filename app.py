@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify, send_from_directory
 
 app = Flask(__name__, static_folder="static")
 
-# ── common password list ──────────────────────────────────────────────────────
+# common password list
 
 def load_common(path):
     if not os.path.isfile(path):
