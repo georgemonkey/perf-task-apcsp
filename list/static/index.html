@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>passguard</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0e0e0e;
+    --surface:  #161616;
+    --border:   #2a2a2a;
+    --text:     #e2e2e2;
+    --muted:    #666;
+    --accent:   #a8ff78;
+    --warn:     #ffcc00;
+    --danger:   #ff5555;
+    --mono:     'IBM Plex Mono', monospace;
+    --sans:     'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 16px 80px;
+  }
+
+  .wrap { width: 100%; max-width: 560px; }
+
+  header { margin-bottom: 40px; }
+  header h1 {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--accent);
+  }
+  header p {
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 12px;
+    margin-top: 4px;
+  }
+
+  /* tabs */
+  .tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 32px;
+  }
+  .tab {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 12px;
+    margin-bottom: -1px;
+    padding: 10px 20px 10px 0;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { border-bottom-color: var(--accent); color: var(--accent); }
+
+  /* panels */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* inputs */
+  .field { margin-bottom: 16px; }
+  label {
+    display: block;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  input[type="password"],
+  input[type="text"],
+  input[type="number"],
+  select {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input:focus, select:focus { border-color: var(--accent); }
+
+  .row { display: flex; gap: 12px; }
+  .row .field { flex: 1; }
+
+  /* checkboxes */
+  .checks { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 16px; }
+  .check-item { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .check-item input[type="checkbox"] {
+    width: 14px; height: 14px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .check-item span {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* button */
+  button.btn {
+    background: var(--accent);
+    border: none;
+    border-radius: 3px;
+    color: #0e0e0e;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 24px;
+    transition: opacity 0.15s;
+    width: 100%;
+    margin-top: 4px;
+  }
+  button.btn:hover { opacity: 0.85; }
+  button.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* results */
+  .result { margin-top: 28px; }
+
+  .strength-bar-wrap { margin-bottom: 16px; }
+  .strength-track {
+    background: var(--border);
+    border-radius: 2px;
+    height: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  .strength-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.4s ease, background 0.4s ease;
+  }
+  .strength-meta {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  .strength-label { font-weight: 500; }
+  .strength-label.strong { color: var(--accent); }
+  .strength-label.moderate { color: var(--warn); }
+  .strength-label.weak { color: var(--danger); }
+  .strength-entropy { color: var(--muted); }
+
+  .check-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .check-row:last-child { border-bottom: none; }
+  .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dot.ok  { background: var(--accent); }
+  .dot.bad { background: var(--danger); }
+  .dot.warn { background: var(--warn); }
+  .dot.muted { background: var(--muted); }
+  .check-row .label { color: var(--muted); min-width: 90px; }
+  .check-row .val { color: var(--text); }
+  .check-row .val.ok { color: var(--accent); }
+  .check-row .val.bad { color: var(--danger); }
+  .check-row .val.warn { color: var(--warn); }
+
+  .tips { margin-top: 16px; }
+  .tips p { color: var(--muted); font-family: var(--mono); font-size: 11px; margin-bottom: 6px; }
+  .tip { color: var(--warn); font-family: var(--mono); font-size: 12px; padding: 3px 0; }
+  .tip::before { content: "→ "; }
+
+  /* password list */
+  .pw-list { margin-top: 4px; }
+  .pw-item {
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+  .pw-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    gap: 12px;
+  }
+  .pw-val {
+    font-family: var(--mono);
+    font-size: 13px;
+    word-break: break-all;
+    flex: 1;
+  }
+  .copy-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 8px;
+    transition: color 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+    width: auto;
+    margin-top: 0;
+  }
+  .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .copy-btn.copied { color: var(--accent); border-color: var(--accent); }
+  .pw-bar {
+    height: 2px;
+    transition: width 0.3s ease, background 0.3s ease;
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .msg {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 10px 0;
+    color: var(--muted);
+  }
+  .msg.ok { color: var(--accent); }
+  .msg.bad { color: var(--danger); }
+  .msg.warn { color: var(--warn); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>passguard</h1>
+    <p>leak checker · strength analyzer · password generator</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="check">check</button>
+    <button class="tab" data-tab="generate">generate</button>
+  </div>
+
+  <!-- CHECK PANEL -->
+  <div class="panel active" id="tab-check">
+    <div class="field">
+      <label>password</label>
+      <input type="password" id="pw-input" placeholder="enter a password to check" autocomplete="off">
+    </div>
+    <button class="btn" id="check-btn">check password</button>
+
+    <div class="result" id="check-result" style="display:none"></div>
+  </div>
+
+  <!-- GENERATE PANEL -->
+  <div class="panel" id="tab-generate">
+    <div class="field">
+      <label>type</label>
+      <select id="gen-mode">
+        <option value="random">random characters</option>
+        <option value="passphrase">passphrase</option>
+      </select>
+    </div>
+
+    <div id="random-opts">
+      <div class="row">
+        <div class="field">
+          <label>length</label>
+          <input type="number" id="gen-length" value="20" min="8" max="128">
+        </div>
+        <div class="field">
+          <label>count</label>
+          <input type="number" id="gen-count" value="5" min="1" max="20">
+        </div>
+      </div>
+      <div class="checks">
+        <label class="check-item"><input type="checkbox" id="opt-upper" checked><span>uppercase</span></label>
+        <label class="check-item"><input type="checkbox" id="opt-digits" checked><span>numbers</span></label>
+        <label class="check-item"><input type="checkbox" id="opt-symbols" checked><span>symbols</span></label>
+        <label class="check-item"><input type="checkbox" id="opt-noambig"><span>no ambiguous</span></label>
+      </div>
+    </div>
+
+    <div id="passphrase-opts" style="display:none">
+      <div class="field">
+        <label>word count</label>
+        <input type="number" id="gen-words" value="4" min="3" max="8">
+      </div>
+    </div>
+
+    <button class="btn" id="gen-btn">generate</button>
+    <div class="result" id="gen-result" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+// ── tabs ──────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+// ── mode toggle ───────────────────────────────────────────────────────────────
+document.getElementById('gen-mode').addEventListener('change', e => {
+  document.getElementById('random-opts').style.display = e.target.value === 'random' ? '' : 'none';
+  document.getElementById('passphrase-opts').style.display = e.target.value === 'passphrase' ? '' : 'none';
+});
+
+// ── strength helpers ──────────────────────────────────────────────────────────
+function strengthColor(label) {
+  return label === 'strong' ? 'var(--accent)' : label === 'moderate' ? 'var(--warn)' : 'var(--danger)';
+}
+
+function renderStrength(s) {
+  const pct = (s.score / 10) * 100;
+  const color = strengthColor(s.label);
+  return `
+    <div class="strength-bar-wrap">
+      <div class="strength-track"><div class="strength-fill" style="width:${pct}%;background:${color}"></div></div>
+      <div class="strength-meta">
+        <span class="strength-label ${s.label}">${s.label}</span>
+        <span class="strength-entropy">${s.entropy} bits · length ${s.length}</span>
+      </div>
+    </div>
+    <div class="check-row"><div class="dot ${s.checks.upper?'ok':'bad'}"></div><span class="label">uppercase</span><span class="val ${s.checks.upper?'ok':'bad'}">${s.checks.upper?'✓':'✗'}</span></div>
+    <div class="check-row"><div class="dot ${s.checks.lower?'ok':'bad'}"></div><span class="label">lowercase</span><span class="val ${s.checks.lower?'ok':'bad'}">${s.checks.lower?'✓':'✗'}</span></div>
+    <div class="check-row"><div class="dot ${s.checks.digit?'ok':'bad'}"></div><span class="label">numbers</span><span class="val ${s.checks.digit?'ok':'bad'}">${s.checks.digit?'✓':'✗'}</span></div>
+    <div class="check-row"><div class="dot ${s.checks.symbol?'ok':'bad'}"></div><span class="label">symbols</span><span class="val ${s.checks.symbol?'ok':'bad'}">${s.checks.symbol?'✓':'✗'}</span></div>
+    ${s.tips.length ? `<div class="tips"><p>suggestions</p>${s.tips.map(t=>`<div class="tip">${t}</div>`).join('')}</div>` : ''}
+  `;
+}
+
+// ── copy ──────────────────────────────────────────────────────────────────────
+function copyText(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'copied';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 1500);
+  });
+}
+
+// ── check ─────────────────────────────────────────────────────────────────────
+document.getElementById('check-btn').addEventListener('click', async () => {
+  const pw = document.getElementById('pw-input').value;
+  if (!pw) return;
+
+  const result = document.getElementById('check-result');
+  result.style.display = 'block';
+  result.innerHTML = `<div class="msg"><span class="spinner"></span>checking...</div>`;
+
+  const res = await fetch('/api/check', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ password: pw })
+  });
+  const data = await res.json();
+
+  let html = renderStrength(data.strength);
+
+  // common check
+  if (data.common !== null) {
+    if (data.common) {
+      html += `<div class="check-row"><div class="dot bad"></div><span class="label">common list</span><span class="val bad">found — change this</span></div>`;
+    } else {
+      html += `<div class="check-row"><div class="dot ok"></div><span class="label">common list</span><span class="val ok">not found <span style="color:var(--muted)">(${data.common_list_size.toLocaleString()} checked)</span></span></div>`;
+    }
+  }
+
+  // hibp
+  if (data.hibp_count === null) {
+    html += `<div class="check-row"><div class="dot warn"></div><span class="label">hibp</span><span class="val warn">network error</span></div>`;
+  } else if (data.hibp_count === 0) {
+    html += `<div class="check-row"><div class="dot ok"></div><span class="label">hibp</span><span class="val ok">no known breaches</span></div>`;
+  } else {
+    html += `<div class="check-row"><div class="dot bad"></div><span class="label">hibp</span><span class="val bad">found ${data.hibp_count.toLocaleString()} times</span></div>`;
+  }
+
+  result.innerHTML = html;
+});
+
+// allow enter key in password field
+document.getElementById('pw-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('check-btn').click();
+});
+
+// ── generate ──────────────────────────────────────────────────────────────────
+document.getElementById('gen-btn').addEventListener('click', async () => {
+  const mode = document.getElementById('gen-mode').value;
+  const result = document.getElementById('gen-result');
+  result.style.display = 'block';
+  result.innerHTML = `<div class="msg"><span class="spinner"></span>generating...</div>`;
+
+  const body = { mode };
+  if (mode === 'random') {
+    body.length     = parseInt(document.getElementById('gen-length').value) || 20;
+    body.count      = parseInt(document.getElementById('gen-count').value) || 5;
+    body.upper      = document.getElementById('opt-upper').checked;
+    body.digits     = document.getElementById('opt-digits').checked;
+    body.symbols    = document.getElementById('opt-symbols').checked;
+    body.no_ambiguous = document.getElementById('opt-noambig').checked;
+  } else {
+    body.words = parseInt(document.getElementById('gen-words').value) || 4;
+  }
+
+  const res = await fetch('/api/generate', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+
+  const items = data.passwords.map(p => {
+    const pct = (p.strength.score / 10) * 100;
+    const color = strengthColor(p.strength.label);
+    const id = Math.random().toString(36).slice(2);
+    return `
+      <div class="pw-item">
+        <div class="pw-top">
+          <span class="pw-val">${p.value}</span>
+          <button class="copy-btn" id="copy-${id}" onclick="copyText('${p.value.replace(/'/g,"\\'")}', this)">copy</button>
+        </div>
+        <div class="pw-bar" style="width:${pct}%;background:${color}"></div>
+      </div>`;
+  }).join('');
+
+  result.innerHTML = `<div class="pw-list">${items}</div>`;
+});
+</script>
+</body>
+</html>
