@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify, send_from_directory
 
 app = Flask(__name__, static_folder="static")
 
-# common password list
+# common password list using csv
 
 def load_common(path):
     if not os.path.isfile(path):
@@ -17,7 +17,7 @@ COMMON = load_common(os.path.join(_here, "commonpwds.csv"))
 def is_common(pw):
     return pw in COMMON or pw.lower() in COMMON
 
-# ── strength ──────────────────────────────────────────────────────────────────
+# calculates entropy by getting the pool size and the length of the password
 
 def strength(pw):
     n = len(pw)
@@ -27,15 +27,37 @@ def strength(pw):
         "digit":  bool(re.search(r'\d', pw)),
         "symbol": bool(re.search(r'[^A-Za-z0-9]', pw)),
     }
-    score = (3 if n >= 16 else 2 if n >= 12 else 1 if n >= 8 else 0) + sum(has.values())
-    if re.search(r'(.)\1{2,}', pw): score -= 1
-    if re.search(r'(012|123|234|345|456|567|678|789|abc|bcd)', pw.lower()): score -= 1
+    # Length tiers (0–5): lets "strong" exist; old formula capped at 7 while strong was >= 8.
+    if n >= 20:
+        length_pts = 5
+    elif n >= 16:
+        length_pts = 4
+    elif n >= 12:
+        length_pts = 3
+    elif n >= 8:
+        length_pts = 2
+    elif n >= 6:
+        length_pts = 1
+    else:
+        length_pts = 0
+
+    kinds = sum(has.values())
+    score = length_pts + kinds
+    if kinds >= 4 and n >= 12:
+        score += 1
+
+    penalty = 0
+    if re.search(r'(.)\1{2,}', pw):
+        penalty += 1
+    if re.search(r'(012|123|234|345|456|567|678|789|abc|bcd)', pw.lower()):
+        penalty += 1
+    score -= min(penalty, 1)
     score = max(0, min(score, 10))
 
     pool = sum([has["lower"]*26, has["upper"]*26, has["digit"]*10, has["symbol"]*32]) or 1
     entropy = round(n * math.log2(pool))
 
-    label = "strong" if score >= 8 else "moderate" if score >= 5 else "weak"
+    label = "strong" if score >= 7 else "moderate" if score >= 5 else "weak"
     tips = []
     if n < 12:            tips.append("use 12+ characters")
     if not has["upper"]:  tips.append("add uppercase letters")
@@ -47,7 +69,7 @@ def strength(pw):
 
     return {"score": score, "label": label, "entropy": entropy, "tips": tips, "checks": has, "length": n}
 
-# ── hibp check ────────────────────────────────────────────────────────────────
+# uses the first five letters of the SHA-1 hash to pull those from the hibp database and then locally check them on the users machine for security. this is called k anonyimity
 
 def check_hibp(pw):
     sha1 = hashlib.sha1(pw.encode()).hexdigest().upper()
@@ -66,7 +88,7 @@ def check_hibp(pw):
     except Exception:
         return None
 
-# ── generator ─────────────────────────────────────────────────────────────────
+# 
 
 WORDS = [
     "amber","blaze","cedar","delta","ember","frost","gleam","haven",

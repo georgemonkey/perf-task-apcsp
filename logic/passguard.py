@@ -43,15 +43,36 @@ def strength(pw):
         "digit":  bool(re.search(r'\d', pw)),
         "symbol": bool(re.search(r'[^A-Za-z0-9]', pw)),
     }
-    score = (3 if n >= 16 else 2 if n >= 12 else 1 if n >= 8 else 0) + sum(has.values())
-    if re.search(r'(.)\1{2,}', pw): score -= 1
-    if re.search(r'(012|123|234|345|456|567|678|789|abc|bcd)', pw.lower()): score -= 1
+    if n >= 20:
+        length_pts = 5
+    elif n >= 16:
+        length_pts = 4
+    elif n >= 12:
+        length_pts = 3
+    elif n >= 8:
+        length_pts = 2
+    elif n >= 6:
+        length_pts = 1
+    else:
+        length_pts = 0
+
+    kinds = sum(has.values())
+    score = length_pts + kinds
+    if kinds >= 4 and n >= 12:
+        score += 1
+
+    penalty = 0
+    if re.search(r'(.)\1{2,}', pw):
+        penalty += 1
+    if re.search(r'(012|123|234|345|456|567|678|789|abc|bcd)', pw.lower()):
+        penalty += 1
+    score -= min(penalty, 1)
     score = max(0, min(score, 10))
 
     pool = sum([has["lower"]*26, has["upper"]*26, has["digit"]*10, has["symbol"]*32]) or 1
     entropy = n * math.log2(pool)
 
-    label = g("strong") if score >= 8 else y("moderate") if score >= 5 else r("weak")
+    label = g("strong") if score >= 6 else y("moderate") if score >= 4 else r("weak")
     tips = []
     if n < 12:            tips.append("use 12+ characters")
     if not has["upper"]:  tips.append("add uppercase letters")
