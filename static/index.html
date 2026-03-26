@@ -348,6 +348,40 @@ function strengthColor(label) {
   return label === 'strong' ? 'var(--accent)' : label === 'moderate' ? 'var(--warn)' : 'var(--danger)';
 }
 
+function formatWithPrefix(n) {
+  const num = Number(n) || 0;
+  const abs = Math.abs(num);
+  const units = [
+    { value: 1e15, name: 'quadrillion' },
+    { value: 1e12, name: 'trillion' },
+    { value: 1e9,  name: 'billion' },
+    { value: 1e6,  name: 'million' },
+    { value: 1e3,  name: 'thousand' }
+  ];
+
+  for (const unit of units) {
+    if (abs >= unit.value) {
+      const scaled = (num / unit.value).toFixed(abs >= unit.value * 100 ? 0 : 2).replace(/\.?0+$/, '');
+      return `${scaled} ${unit.name}`;
+    }
+  }
+  return num.toLocaleString();
+}
+
+function bruteForceClass(seconds) {
+  const s = Number(seconds) || 0;
+  if (s < 60 * 60 * 24) return 'bad';            // under 1 day
+  if (s < 60 * 60 * 24 * 365) return 'warn';     // under 1 year
+  return 'ok';                                    // 1+ year
+}
+
+function combinationsClass(count) {
+  const n = Number(count) || 0;
+  if (n < 1e9) return 'bad';      // under 1 billion
+  if (n < 1e12) return 'warn';    // under 1 trillion
+  return 'ok';                    // 1+ trillion
+}
+
 function renderStrength(s) {
   const pct = (s.score / 10) * 100;
   const color = strengthColor(s.label);
@@ -411,6 +445,11 @@ document.getElementById('check-btn').addEventListener('click', async () => {
   } else {
     html += `<div class="check-row"><div class="dot bad"></div><span class="label">compared to hibp database:</span><span class="val bad">found ${data.hibp_count.toLocaleString()} times</span><span class="val">sent via k-anonymity <br> using SHA-1</span></div>`;
   }
+
+  const bruteClass = bruteForceClass(data.brute_force_seconds);
+  const comboClass = combinationsClass(data.combinations);
+  html += `<div class="check-row"><div class="dot ${comboClass}"></div><span class="label">combinations</span><span class="val ${comboClass}">${formatWithPrefix(data.combinations)} <span style="color:var(--muted)">(${Number(data.combinations).toLocaleString()})</span></span></div>`;
+  html += `<div class="check-row"><div class="dot ${bruteClass}"></div><span class="label">brute force est.</span><span class="val ${bruteClass}">${data.brute_force_text} <span style="color:var(--muted)">(avg @ ${formatWithPrefix(data.guesses_per_second || 0)} guesses/sec)</span></span></div>`;
 
   result.innerHTML = html;
 });

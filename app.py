@@ -27,7 +27,7 @@ def strength(pw):
         "digit":  bool(re.search(r'\d', pw)),
         "symbol": bool(re.search(r'[^A-Za-z0-9]', pw)),
     }
-    # Length tiers (0–5): lets "strong" exist; old formula capped at 7 while strong was >= 8.
+    
     if n >= 20:
         length_pts = 5
     elif n >= 16:
@@ -97,6 +97,55 @@ WORDS = [
     "yacht","zesty","brave","coral","dream","eagle","flame","grape",
 ]
 
+def combinations(pwd):
+    length = len(pwd)
+    poolSize= 0
+    has_lowercase = any(char.islower() for char in pwd)
+    if has_lowercase:
+        poolSize += 26
+
+    has_uppercase = any(char.isupper() for char in pwd)
+
+    if has_uppercase:
+        poolSize += 26
+
+    has_numbers = any(char.isdigit() for char in pwd)
+
+    if has_numbers:
+        poolSize += 9
+
+    has_symbols = any(not char.isalnum() for char in pwd)
+
+    if has_symbols:
+        poolSize += 32
+
+    combinations = poolSize**length
+    return combinations
+
+def format_duration(seconds):
+    if seconds < 1:
+        return "under 1 second"
+
+    units = [
+        ("year", 365 * 24 * 60 * 60),
+        ("day", 24 * 60 * 60),
+        ("hour", 60 * 60),
+        ("minute", 60),
+        ("second", 1),
+    ]
+
+    parts = []
+    remaining = int(seconds)
+    for name, size in units:
+        if remaining >= size:
+            count = remaining // size
+            remaining %= size
+            parts.append(f"{count} {name}{'' if count == 1 else 's'}")
+        if len(parts) == 2:
+            break
+
+    return " ".join(parts)
+
 def gen_password(length=20, upper=True, digits=True, symbols=True, no_ambiguous=False):
     pool = string.ascii_lowercase
     if upper:        pool += string.ascii_uppercase
@@ -134,12 +183,22 @@ def api_check():
     s = strength(pw)
     common = is_common(pw) if COMMON else None
     hibp = check_hibp(pw)
+    combo_count = combinations(pw)
+
+    # Approximate average guesses needed for brute force:
+    # half the search space at 10 billion guesses/sec.
+    guesses_per_second = 10_000_000_000
+    brute_force_seconds = (combo_count / 2) / guesses_per_second
 
     return jsonify({
         "strength": s,
         "common": common,
         "common_list_size": len(COMMON),
         "hibp_count": hibp,   # None = network error, 0 = clean, N = breached
+        "combinations": combo_count,
+        "brute_force_seconds": brute_force_seconds,
+        "brute_force_text": format_duration(brute_force_seconds),
+        "guesses_per_second": guesses_per_second,
     })
 
 @app.route("/api/generate", methods=["POST"])
