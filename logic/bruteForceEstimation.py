@@ -23,4 +23,4 @@ def combinations(pwd):
     combinations = poolSize**length
     return combinations
 
-print(combinations("skibidi@U1"))
+print(combinations("ilovesigmas.com"))

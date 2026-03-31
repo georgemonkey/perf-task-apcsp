@@ -1,4 +1,4 @@
-<!--GENERATIVE AI USED FOR THE CSS AND COLOR LAYOUT. ALL TECHNICAL CODE AND OVERALL DESIGN BY STUDENT, me :)-->>
+<!--GENERATIVE AI USED FOR THE CSS AND COLOURS. ALL TECHNICAL CODE AND OVERALL DESIGN BY STUDENT, me :)-->>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -442,7 +442,7 @@ document.getElementById('check-btn').addEventListener('click', async () => {
   if (data.hibp_count === null) {
     html += `<div class="check-row"><div class="dot warn"></div><span class="label">hibp DATA LEAK</span><span class="val warn">network error</span><span class="val">sent via k-anonymity <br> using SHA-1</span></div>`;
   } else if (data.hibp_count === 0) {
-    html += `<div class="check-row"><div class="dot ok"></div><span class="label">compared to hibp database:</span><span class="val ok">no known breaches</span><span class="val">sent via k-anonymity <br> using SHA-1</span></div>`;
+    html += `<div class="check-row"><div class="dot ok"></div><span class="label">compared to hibp database:</span><span class="val ok">no known leaks</span><span class="val">sent via k-anonymity <br> using SHA-1</span></div>`;
   } else {
     html += `<div class="check-row"><div class="dot bad"></div><span class="label">compared to hibp database:</span><span class="val bad">found ${data.hibp_count.toLocaleString()} times</span><span class="val">sent via k-anonymity <br> using SHA-1</span></div>`;
   }
