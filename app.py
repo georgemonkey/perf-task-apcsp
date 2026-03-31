@@ -88,7 +88,7 @@ def check_hibp(pw):
     except Exception:
         return None
 
-# 
+# list of passphrase words
 
 WORDS = [
     "amber","blaze","cedar","delta","ember","frost","gleam","haven",
@@ -97,6 +97,7 @@ WORDS = [
     "yacht","zesty","brave","coral","dream","eagle","flame","grape",
 ]
 
+# combination functions gives the amount of combos possible in a function by calcing the pool size and length and setting pool size ^ length
 def combinations(pwd):
     length = len(pwd)
     poolSize= 0
@@ -122,6 +123,7 @@ def combinations(pwd):
     combinations = poolSize**length
     return combinations
 
+# formats the time to be put in the html (GENERATIVE AI USED HERE)
 def format_duration(seconds):
     if seconds < 1:
         return "under 1 second"
@@ -146,6 +148,8 @@ def format_duration(seconds):
 
     return " ".join(parts)
 
+# generates password using secret module - much much stronger than random which is predicatble
+# basically shuffles the pools up so no letters are like next to their original position then uses secret
 def gen_password(length=20, upper=True, digits=True, symbols=True, no_ambiguous=False):
     pool = string.ascii_lowercase
     if upper:        pool += string.ascii_uppercase
@@ -163,12 +167,13 @@ def gen_password(length=20, upper=True, digits=True, symbols=True, no_ambiguous=
     secrets.SystemRandom().shuffle(combined)
     return "".join(combined)
 
+# generates a passphrase using the list defined above and uses the secret module to securly and unpredictabley generate passphrases
 def gen_passphrase(n=4):
     words = [secrets.choice(WORDS) for _ in range(n)]
     sep = secrets.choice(["-", ".", "_"])
     return sep.join(words) + str(secrets.randbelow(900) + 100) + secrets.choice("!@#$")
 
-# ── routes ────────────────────────────────────────────────────────────────────
+# html flask routes
 
 @app.route("/")
 def index():
@@ -185,8 +190,8 @@ def api_check():
     hibp = check_hibp(pw)
     combo_count = combinations(pw)
 
-    # Approximate average guesses needed for brute force:
-    # half the search space at 10 billion guesses/sec.
+    # approximate average guesses needed for brute force:
+    # half the search space at 10 billion guesses/sec to assume a very powerful computer
     guesses_per_second = 10_000_000_000
     brute_force_seconds = (combo_count / 2) / guesses_per_second
 
