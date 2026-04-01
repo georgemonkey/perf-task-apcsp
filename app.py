@@ -154,14 +154,13 @@ def gen_password(length=20, upper=True, digits=True, symbols=True, no_ambiguous=
     pool = string.ascii_lowercase
     if upper:        pool += string.ascii_uppercase
     if digits:       pool += string.digits
-    if symbols:      pool += "!@#$%^&*()-_=+"
-    if no_ambiguous: pool = pool.translate(str.maketrans("", "", "0Ol1I"))
-
-    required = [secrets.choice(string.ascii_lowercase)]
+    if symbols:      pool += "`~!@#$%^&*()-_=+[{]}|\]<>.?/`" 
+    if no_ambiguous: pool = pool.translate(str.maketrans("", "", "0Ol1I")) # all types of ambigous characters that look the same in some fonts 
+    required = [secrets.choice(string.ascii_lowercase)] # 
     if upper:   required.append(secrets.choice(string.ascii_uppercase))
     if digits:  required.append(secrets.choice(string.digits))
-    if symbols: required.append(secrets.choice("!@#$%^&*"))
-
+    if symbols: required.append(secrets.choice("`~!@#$%^&*()-_=+[{]}|\]<>.?/`"))
+    
     rest = [secrets.choice(pool) for _ in range(length - len(required))]
     combined = required + rest
     secrets.SystemRandom().shuffle(combined)
